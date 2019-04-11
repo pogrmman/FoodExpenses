@@ -24,8 +24,10 @@ ui <- fluidPage(
                   choices = foodAtHomeChoices,
                   multiple = TRUE,
                   selected = NULL),
-      checkboxInput("Percent",
-                    label = "Show as percentages?"),
+      radioButtons("ShowAs",
+                   label = "Show as",
+                   choices = list("Sales", "Percentage of Total", "Per Capita"),
+                   selected = "Sales"),
       checkboxInput("Tax.Tip",
                    label = "Include taxes and tips?"),
       checkboxInput("Tax.Tip.Separate",
@@ -76,24 +78,36 @@ server <- function(input, output, session) {
   output$plot <- renderPlot({
     active <- active()
     totals <- active %>% filter(Location == "Total")
-    if (input$Tax.Tip & !input$Percent) {
+    if (input$Tax.Tip & input$ShowAs == "Sales") {
       yvar = "SalesWithTaxTip"
       figTitle = "Sales in Millions of 2017 Dollars"
       yTitle = "Sales (Millions USD)"
       ttTitle = "Tips and Taxes in Millions of 2017 Dollars"
       tty = "Tips.Taxes"
-    } else if(input$Tax.Tip & input$Percent) {
+    } else if(input$Tax.Tip & input$ShowAs == "Percentage of Total") {
       yvar = "PercentTotal"
       figTitle = "Percentage of Total Food and Alcohol Expenditures"
       yTitle = "Percentage of Expenditures"
       ttTitle = "Percentage of Total Food/Alcohol Tips and Taxes"
       tty = "PercentTipsTaxes"
-    } else if(input$Percent) {
+    } else if(input$Tax.Tip & input$ShowAs == "Per Capita") {
+      yvar = "PerCapitaTotal"
+      figTitle = "Per Capita Sales"
+      yTitle = "Per Capita Sales (USD)"
+      ttTitle = "Per Capita Food/Alcohol Tips and Taxes (USD)"
+      tty = "PerCapitaTipsTaxes"
+    } else if(input$ShowAs == "Percentage of Total") {
       yvar = "PercentSales"
       figTitle = "Percentage of Total Food and Alcohol Expenditures"
       yTitle = "Percentage of Expenditures"
       ttTitle = "Percentage of Total Food/Alcohol Tips and Taxes"
       tty = "PercentTipsTaxes"
+    } else if(input$ShowAs == "Per Capita") {
+      yvar = "PerCapitaSales"
+      figTitle = "Per Capita Sales"
+      yTitle = "Per Capita Sales (USD)"
+      ttTitle = "Per Capita Food/Alcohol Tips and Taxes (USD)"
+      tty = "PerCapitaTipsTaxes"
     } else {
       yvar = "Sales"
       figTitle = "Sales in Millions of 2017 Dollars"

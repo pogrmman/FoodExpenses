@@ -5,6 +5,7 @@ library(tidyr)
 # Load data
 noTaxnoTip <- read.csv("./Data/no_tax_no_tip.csv", skip = 4, header = TRUE)[1:21,]
 withTaxTip <- read.csv("./Data/tax_tip_inc.csv", skip = 4, header = TRUE)[1:21,]
+popData <- read.csv("./Data/population.csv", header = TRUE)
 
 # Convert all to numeric
 noTaxnoTip <- noTaxnoTip %>% mutate_all(function(x) as.numeric(as.character(gsub(",","",x))))
@@ -144,6 +145,24 @@ foodAwayFromHome <- foodAwayFromHome %>% left_join(totals, by = "Year") %>%
                                                                   -TotalTipsTaxes,
                                                                   -Total)
 
+# Calculate per capita cost
+alcoholAtHome <- alcoholAtHome %>% left_join(popData, by = "Year") %>%
+  mutate(PerCapitaSales = Sales * 1000000 / POP,
+         PerCapitaTipsTaxes = Tips.Taxes * 1000000 / POP,
+         PerCapitaTotal = SalesWithTaxTip * 1000000 / POP) %>% select(-POP)
+alcoholAwayFromHome <- alcoholAwayFromHome %>% left_join(popData, by = "Year") %>%
+  mutate(PerCapitaSales = Sales * 1000000 / POP,
+         PerCapitaTipsTaxes = Tips.Taxes * 1000000 / POP,
+         PerCapitaTotal = SalesWithTaxTip * 1000000 / POP) %>% select(-POP)
+foodAtHome <- foodAtHome %>% left_join(popData, by = "Year") %>%
+  mutate(PerCapitaSales = Sales * 1000000 / POP,
+         PerCapitaTipsTaxes = Tips.Taxes * 1000000 / POP,
+         PerCapitaTotal = SalesWithTaxTip * 1000000 / POP) %>% select(-POP)
+foodAwayFromHome <- foodAwayFromHome %>% left_join(popData, by = "Year") %>%
+  mutate(PerCapitaSales = Sales * 1000000 / POP,
+         PerCapitaTipsTaxes = Tips.Taxes * 1000000 / POP,
+         PerCapitaTotal = SalesWithTaxTip * 1000000 / POP) %>% select(-POP)
+
 # Get list of locations in each type
 foodAtHomeChoices <- foodAtHome %>% select(Location) %>% 
   distinct() %>% filter(Location != "Total")
@@ -159,13 +178,17 @@ bothAlcohol <- alcoholAwayFromHome %>% bind_rows(alcoholAtHome)
 totals <- bothAlcohol %>% filter(Location == "Total") %>% group_by(Year) %>%
   summarize(Sales = sum(Sales), Tips.Taxes = sum(Tips.Taxes), 
             SalesWithTaxTip = sum(SalesWithTaxTip), PercentSales = sum(PercentSales),
-            PercentTipsTaxes = sum(PercentTipsTaxes), PercentTotal = sum(PercentTotal))
+            PercentTipsTaxes = sum(PercentTipsTaxes), PercentTotal = sum(PercentTotal),
+            PerCapitaTipsTaxes = sum(PerCapitaTipsTaxes), PerCapitaTotal = sum(PerCapitaTotal),
+            PerCapitaSales = sum(PerCapitaSales))
 totals$Location = "Total"
 bothAlcohol <- bothAlcohol %>% filter(Location != "Total") %>% bind_rows(totals)
 totals <- bothAlcohol %>% filter(Location == "Other") %>% group_by(Year) %>%
   summarize(Sales = sum(Sales), Tips.Taxes = sum(Tips.Taxes), 
             SalesWithTaxTip = sum(SalesWithTaxTip), PercentSales = sum(PercentSales),
-            PercentTipsTaxes = sum(PercentTipsTaxes), PercentTotal = sum(PercentTotal))
+            PercentTipsTaxes = sum(PercentTipsTaxes), PercentTotal = sum(PercentTotal),
+            PerCapitaTipsTaxes = sum(PerCapitaTipsTaxes), PerCapitaTotal = sum(PerCapitaTotal),
+            PerCapitaSales = sum(PerCapitaSales))
 totals$Location = "Other"
 bothAlcohol <- bothAlcohol %>% filter(Location != "Other") %>% bind_rows(totals)
 
@@ -173,7 +196,9 @@ bothFood <- foodAwayFromHome %>% bind_rows(foodAtHome)
 totals <- bothFood %>% filter(Location == "Total") %>% group_by(Year) %>%
   summarize(Sales = sum(Sales), Tips.Taxes = sum(Tips.Taxes), 
             SalesWithTaxTip = sum(SalesWithTaxTip), PercentSales = sum(PercentSales),
-            PercentTipsTaxes = sum(PercentTipsTaxes), PercentTotal = sum(PercentTotal))
+            PercentTipsTaxes = sum(PercentTipsTaxes), PercentTotal = sum(PercentTotal),
+            PerCapitaTipsTaxes = sum(PerCapitaTipsTaxes), PerCapitaTotal = sum(PerCapitaTotal),
+            PerCapitaSales = sum(PerCapitaSales))
 totals$Location = "Total"
 bothFood <- bothFood %>% filter(Location != "Total") %>% bind_rows(totals)
 
